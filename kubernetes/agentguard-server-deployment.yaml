@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentguard-server
+  namespace: poc-agentguard
+  labels:
+    app: agentguard-server
+    autopoc.io/project: agentguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agentguard-server
+  template:
+    metadata:
+      labels:
+        app: agentguard-server
+    spec:
+      containers:
+        - name: agentguard-server
+          image: quay.io/aicatalyst/agentguard-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 38080
+          env:
+            - name: AGENTGUARD_HOST
+              value: "0.0.0.0"
+            - name: AGENTGUARD_PORT
+              value: "38080"
+            - name: AGENTGUARD_MODE
+              value: "enforce"
+            - name: AGENTGUARD_RUNTIME_MODE
+              value: "sync"
+            - name: AGENTGUARD_LOG_LEVEL
+              value: "info"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 38080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 38080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
