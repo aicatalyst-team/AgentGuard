@@ -1,6 +1,4 @@
 # AgentGuard UBI-based Dockerfile for OpenShift
-# Single-stage build for Python application
-
 FROM registry.access.redhat.com/ubi9/python-312
 
 WORKDIR /opt/app-root/src
@@ -15,13 +13,11 @@ COPY frontend ./frontend
 COPY scripts ./scripts
 
 # Install the package with server extras (fastapi + uvicorn)
+# Must be USER 0 for pip install on UBI images and for chgrp
 USER 0
 RUN pip install --no-cache-dir ".[server]" && \
-    chmod +x scripts/entrypoint.sh
-USER 1001
-
-# OpenShift compatibility: arbitrary UID support
-RUN chgrp -R 0 /opt/app-root && chmod -R g=u /opt/app-root
+    chmod +x scripts/entrypoint.sh && \
+    chgrp -R 0 /opt/app-root && chmod -R g=u /opt/app-root
 
 # Use non-privileged port
 ENV AGENTGUARD_HOST=0.0.0.0 \
